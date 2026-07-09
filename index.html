@@ -1,0 +1,2219 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TechServ Pro — Sistema de Órdenes de Trabajo</title>
+<style>
+:root{
+  --bg:#05070a;
+  --bg-panel:#0b0f16;
+  --bg-card:#0e131c;
+  --bg-elev:#131a26;
+  --border:#1c2532;
+  --border-glow:#1f3a4a;
+  --cyan:#22d3ee;
+  --cyan-dim:#0891b2;
+  --purple:#a855f7;
+  --purple-dim:#7c3aed;
+  --text:#e6edf3;
+  --text-dim:#8b98a9;
+  --text-faint:#4b5768;
+  --green:#34d399;
+  --amber:#fbbf24;
+  --red:#f87171;
+  --font-display:'Orbitron',sans-serif;
+  --font-body:'Rajdhani',sans-serif;
+  --font-mono:'Share Tech Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap');
+
+body{
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(168,85,247,0.08), transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(34,211,238,0.08), transparent 50%),
+    var(--bg);
+  color:var(--text);
+  font-family:var(--font-body);
+  font-size:16px;
+  min-height:100vh;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-track{background:var(--bg-panel);}
+::-webkit-scrollbar-thumb{background:var(--border-glow);border-radius:4px;}
+
+/* Layout */
+.app{display:flex;min-height:100vh;}
+
+.sidebar{
+  width:230px;
+  background:var(--bg-panel);
+  border-right:1px solid var(--border);
+  padding:24px 0;
+  display:flex;
+  flex-direction:column;
+  position:sticky;
+  top:0;
+  height:100vh;
+}
+.brand{
+  padding:0 20px 24px 20px;
+  border-bottom:1px solid var(--border);
+  margin-bottom:20px;
+}
+.brand-mark{
+  font-family:var(--font-display);
+  font-weight:900;
+  font-size:20px;
+  letter-spacing:2px;
+  background:linear-gradient(90deg,var(--cyan),var(--purple));
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+.brand-sub{
+  font-family:var(--font-mono);
+  font-size:10px;
+  color:var(--text-faint);
+  letter-spacing:3px;
+  margin-top:4px;
+}
+.nav{display:flex;flex-direction:column;gap:2px;padding:0 12px;}
+.nav-btn{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  background:none;
+  border:none;
+  color:var(--text-dim);
+  font-family:var(--font-body);
+  font-weight:600;
+  font-size:14px;
+  letter-spacing:0.5px;
+  padding:11px 12px;
+  border-radius:6px;
+  cursor:pointer;
+  text-align:left;
+  border-left:2px solid transparent;
+  transition:all .15s;
+}
+.nav-btn:hover{background:var(--bg-card);color:var(--text);}
+.nav-btn.active{
+  background:linear-gradient(90deg, rgba(34,211,238,0.12), transparent);
+  color:var(--cyan);
+  border-left:2px solid var(--cyan);
+}
+.nav-icon{font-size:16px;width:18px;text-align:center;}
+
+.main{flex:1;padding:28px 36px;max-width:1400px;}
+
+.page-title{
+  font-family:var(--font-display);
+  font-size:22px;
+  font-weight:700;
+  letter-spacing:1px;
+  margin-bottom:4px;
+}
+.page-sub{color:var(--text-faint);font-size:13px;font-family:var(--font-mono);margin-bottom:24px;}
+
+/* Cards */
+.card{
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:20px;
+}
+.grid{display:grid;gap:16px;}
+.grid-4{grid-template-columns:repeat(4,1fr);}
+.grid-2{grid-template-columns:repeat(2,1fr);}
+
+.stat-card{
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:18px 20px;
+  position:relative;
+  overflow:hidden;
+}
+.stat-card::before{
+  content:'';
+  position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--cyan),var(--purple));
+  opacity:0.7;
+}
+.stat-label{font-size:11px;color:var(--text-faint);letter-spacing:1.5px;font-family:var(--font-mono);text-transform:uppercase;}
+.stat-value{font-family:var(--font-display);font-size:26px;font-weight:700;margin-top:8px;color:var(--text);}
+.stat-value.cyan{color:var(--cyan);}
+.stat-value.purple{color:var(--purple);}
+.stat-value.green{color:var(--green);}
+.stat-value.amber{color:var(--amber);}
+
+/* Buttons */
+.btn{
+  font-family:var(--font-body);
+  font-weight:600;
+  font-size:13px;
+  letter-spacing:0.5px;
+  padding:9px 16px;
+  border-radius:6px;
+  border:1px solid var(--border-glow);
+  background:var(--bg-elev);
+  color:var(--text);
+  cursor:pointer;
+  transition:all .15s;
+}
+.btn:hover{border-color:var(--cyan);box-shadow:0 0 12px rgba(34,211,238,0.25);}
+.btn-primary{
+  background:linear-gradient(90deg,var(--cyan-dim),var(--cyan));
+  color:#031014;
+  border:none;
+  font-weight:700;
+}
+.btn-primary:hover{box-shadow:0 0 18px rgba(34,211,238,0.45);}
+.btn-purple{
+  background:linear-gradient(90deg,var(--purple-dim),var(--purple));
+  color:#0d0518;
+  border:none;
+  font-weight:700;
+}
+.btn-purple:hover{box-shadow:0 0 18px rgba(168,85,247,0.45);}
+.btn-danger{border-color:var(--red);color:var(--red);background:transparent;}
+.btn-danger:hover{box-shadow:0 0 12px rgba(248,113,113,0.3);}
+.btn-sm{padding:5px 10px;font-size:11px;}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;}
+
+/* Table */
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13.5px;}
+th{
+  text-align:left;
+  padding:10px 12px;
+  color:var(--text-faint);
+  font-family:var(--font-mono);
+  font-size:11px;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  border-bottom:1px solid var(--border);
+}
+td{padding:11px 12px;border-bottom:1px solid var(--border);color:var(--text);}
+tr:hover td{background:rgba(34,211,238,0.03);}
+
+.badge{
+  display:inline-block;
+  padding:3px 10px;
+  border-radius:20px;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:0.5px;
+  font-family:var(--font-mono);
+}
+.badge-ingresado{background:rgba(139,152,169,0.15);color:var(--text-dim);border:1px solid var(--text-faint);}
+.badge-diagnostico{background:rgba(251,191,36,0.12);color:var(--amber);border:1px solid var(--amber);}
+.badge-reparacion{background:rgba(34,211,238,0.12);color:var(--cyan);border:1px solid var(--cyan);}
+.badge-espera{background:rgba(168,85,247,0.12);color:var(--purple);border:1px solid var(--purple);}
+.badge-listo{background:rgba(52,211,153,0.12);color:var(--green);border:1px solid var(--green);}
+.badge-entregado{background:rgba(52,211,153,0.25);color:var(--green);border:1px solid var(--green);}
+
+/* Forms */
+.field{margin-bottom:14px;}
+.field label{
+  display:block;
+  font-size:12px;
+  color:var(--text-dim);
+  margin-bottom:6px;
+  letter-spacing:0.5px;
+  font-weight:600;
+}
+.field input, .field select, .field textarea{
+  width:100%;
+  background:var(--bg-elev);
+  border:1px solid var(--border);
+  color:var(--text);
+  padding:10px 12px;
+  border-radius:6px;
+  font-family:var(--font-body);
+  font-size:14px;
+}
+.field input:focus, .field select:focus, .field textarea:focus{
+  outline:none;
+  border-color:var(--cyan);
+  box-shadow:0 0 0 3px rgba(34,211,238,0.1);
+}
+.field textarea{resize:vertical;min-height:70px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+
+/* Modal */
+.modal-overlay{
+  display:none;
+  position:fixed;inset:0;
+  background:rgba(2,4,8,0.75);
+  backdrop-filter:blur(3px);
+  z-index:100;
+  align-items:flex-start;
+  justify-content:center;
+  padding:40px 20px;
+  overflow-y:auto;
+}
+.modal-overlay.open{display:flex;}
+.modal{
+  background:var(--bg-panel);
+  border:1px solid var(--border-glow);
+  border-radius:12px;
+  width:100%;
+  max-width:560px;
+  padding:26px;
+  box-shadow:0 0 40px rgba(34,211,238,0.08);
+  max-height:90vh;
+  overflow-y:auto;
+}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+.modal-header h2{font-family:var(--font-display);font-size:17px;letter-spacing:0.5px;}
+.modal-close{background:none;border:none;color:var(--text-faint);font-size:20px;cursor:pointer;}
+.modal-close:hover{color:var(--text);}
+
+/* Search / toolbar */
+.toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px;flex-wrap:wrap;}
+.search-input{
+  background:var(--bg-elev);
+  border:1px solid var(--border);
+  color:var(--text);
+  padding:9px 14px;
+  border-radius:6px;
+  font-size:13px;
+  min-width:240px;
+}
+.search-input:focus{outline:none;border-color:var(--cyan);}
+
+.empty-state{
+  text-align:center;
+  padding:50px 20px;
+  color:var(--text-faint);
+}
+.empty-state .glyph{font-size:34px;margin-bottom:10px;opacity:0.5;}
+
+/* Print doc */
+.print-doc{display:none;}
+@media print{
+  body *{visibility:hidden;}
+  .print-doc, .print-doc *{visibility:visible;}
+  .print-doc{
+    display:block !important;
+    position:absolute;top:0;left:0;width:100%;
+    background:#fff;color:#000;padding:30px;
+  }
+}
+
+.section{display:none;}
+.section.active{display:block;}
+
+.mini{font-size:12px;color:var(--text-faint);}
+.divider{height:1px;background:var(--border);margin:18px 0;}
+
+.tag-count{
+  background:var(--bg-elev);
+  color:var(--cyan);
+  font-family:var(--font-mono);
+  font-size:11px;
+  padding:2px 8px;
+  border-radius:10px;
+  border:1px solid var(--border-glow);
+}
+
+.toast{
+  position:fixed;bottom:24px;right:24px;
+  background:var(--bg-elev);
+  border:1px solid var(--cyan);
+  color:var(--text);
+  padding:12px 18px;
+  border-radius:8px;
+  font-size:13px;
+  box-shadow:0 0 20px rgba(34,211,238,0.2);
+  z-index:200;
+  opacity:0;
+  transform:translateY(10px);
+  transition:all .3s;
+  pointer-events:none;
+}
+.toast.show{opacity:1;transform:translateY(0);}
+
+@media (max-width:900px){
+  .app{flex-direction:column;}
+  .sidebar{width:100%;height:auto;position:relative;flex-direction:row;overflow-x:auto;padding:12px;}
+  .brand{display:none;}
+  .nav{flex-direction:row;padding:0;}
+  .main{padding:18px;}
+  .grid-4{grid-template-columns:repeat(2,1fr);}
+  .field-row{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">TECHSERV PRO</div>
+      <div class="brand-sub">SISTEMA DE SERVICIO TÉCNICO</div>
+    </div>
+    <nav class="nav">
+      <button class="nav-btn active" data-section="dashboard"><span class="nav-icon">◆</span> Dashboard</button>
+      <button class="nav-btn" data-section="ordenes"><span class="nav-icon">◆</span> Órdenes de Trabajo</button>
+      <button class="nav-btn" data-section="clientes"><span class="nav-icon">◆</span> Clientes</button>
+      <button class="nav-btn" data-section="inventario"><span class="nav-icon">◆</span> Inventario</button>
+      <button class="nav-btn" data-section="gastos"><span class="nav-icon">◆</span> Gastos</button>
+      <button class="nav-btn" data-section="contabilidad"><span class="nav-icon">◆</span> Contabilidad</button>
+      <button class="nav-btn" data-section="empresa"><span class="nav-icon">◆</span> Empresa</button>
+      <button class="nav-btn" data-section="respaldos"><span class="nav-icon">◆</span> Respaldos</button>
+    </nav>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <section id="dashboard" class="section active">
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub">RESUMEN GENERAL DEL TALLER</div>
+
+      <div class="grid grid-4" style="margin-bottom:22px;">
+        <div class="stat-card">
+          <div class="stat-label">Órdenes Activas</div>
+          <div class="stat-value cyan" id="statActivas">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Listas p/ Entrega</div>
+          <div class="stat-value green" id="statListas">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Clientes Registrados</div>
+          <div class="stat-value purple" id="statClientes">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Ingresos del Mes</div>
+          <div class="stat-value amber" id="statIngresos">$0</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <h3 style="font-family:var(--font-display);font-size:14px;letter-spacing:1px;">Últimas Órdenes Ingresadas</h3>
+          <span class="tag-count" id="tagCountDash">0</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>N° OT</th><th>Cliente</th><th>Dispositivo</th><th>Ingreso</th><th>Estado</th></tr></thead>
+            <tbody id="dashOrdersBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- CLIENTES -->
+    <section id="clientes" class="section">
+      <div class="page-title">Clientes</div>
+      <div class="page-sub">BASE DE DATOS DE CLIENTES</div>
+
+      <div class="toolbar">
+        <input type="text" class="search-input" id="searchClientes" placeholder="Buscar por nombre, RUT o teléfono...">
+        <button class="btn btn-primary" onclick="openClienteModal()">+ Nuevo Cliente</button>
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Nombre</th><th>RUT</th><th>Teléfono</th><th>Email</th><th>Órdenes</th><th>Acciones</th></tr></thead>
+            <tbody id="clientesBody"></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="clientesEmpty" style="display:none;">
+          <div class="glyph">⬡</div>
+          Aún no hay clientes registrados.
+        </div>
+      </div>
+    </section>
+
+    <!-- ORDENES -->
+    <section id="ordenes" class="section">
+      <div class="page-title">Órdenes de Trabajo</div>
+      <div class="page-sub">CONTROL DE ENTRADA Y SALIDA DE EQUIPOS</div>
+
+      <div class="toolbar">
+        <input type="text" class="search-input" id="searchOrdenes" placeholder="Buscar por OT, cliente o dispositivo...">
+        <div class="btn-row">
+          <select id="filterEstado" class="search-input" style="min-width:170px;">
+            <option value="">Todos los estados</option>
+            <option value="ingresado">Ingresado</option>
+            <option value="diagnostico">En Diagnóstico</option>
+            <option value="reparacion">En Reparación</option>
+            <option value="espera">Esperando Repuesto</option>
+            <option value="listo">Listo para Entrega</option>
+            <option value="entregado">Entregado</option>
+          </select>
+          <button class="btn btn-primary" onclick="openOrdenModal()">+ Nueva Orden</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>N° OT</th><th>Cliente</th><th>Categoría</th><th>Equipo</th>
+              <th>Ingreso</th><th>Salida</th><th>Estado</th><th>Total</th><th>Acciones</th>
+            </tr></thead>
+            <tbody id="ordenesBody"></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="ordenesEmpty" style="display:none;">
+          <div class="glyph">⬡</div>
+          Aún no hay órdenes de trabajo registradas.
+        </div>
+      </div>
+    </section>
+
+    <!-- INVENTARIO -->
+    <section id="inventario" class="section">
+      <div class="page-title">Inventario</div>
+      <div class="page-sub">GESTIÓN DE REPUESTOS Y COMPONENTES</div>
+
+      <div class="toolbar">
+        <input type="text" class="search-input" id="searchInventario" placeholder="Buscar por nombre o categoría...">
+        <button class="btn btn-primary" onclick="openInventarioModal()">+ Nuevo Artículo</button>
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Artículo</th><th>Categoría</th><th>Stock</th><th>Costo Unitario</th><th>Valor Total</th><th>Acciones</th></tr></thead>
+            <tbody id="inventarioBody"></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="inventarioEmpty" style="display:none;">
+          <div class="glyph">⬡</div>
+          Sin artículos en inventario.
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:12px;color:var(--text-faint);letter-spacing:1px;font-family:var(--font-mono);text-transform:uppercase;">Valor Total Inventario</div>
+            <div style="font-family:var(--font-display);font-size:28px;font-weight:700;margin-top:6px;color:var(--cyan);" id="inventarioTotal">$0</div>
+          </div>
+          <div style="font-size:48px;opacity:0.3;">📦</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GASTOS -->
+    <section id="gastos" class="section">
+      <div class="page-title">Gastos Operacionales</div>
+      <div class="page-sub">REGISTRO DE GASTOS DEL TALLER</div>
+
+      <div class="toolbar">
+        <input type="text" class="search-input" id="searchGastos" placeholder="Buscar por descripción o categoría...">
+        <div class="btn-row">
+          <select id="filterGastosMes" class="search-input" style="min-width:150px;">
+            <option value="">Todos los meses</option>
+            <option value="01">Enero</option>
+            <option value="02">Febrero</option>
+            <option value="03">Marzo</option>
+            <option value="04">Abril</option>
+            <option value="05">Mayo</option>
+            <option value="06">Junio</option>
+            <option value="07">Julio</option>
+            <option value="08">Agosto</option>
+            <option value="09">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
+          </select>
+          <button class="btn btn-primary" onclick="openGastoModal()">+ Nuevo Gasto</button>
+        </div>
+      </div>
+
+      <div class="grid grid-4" style="margin-bottom:22px;">
+        <div class="stat-card">
+          <div class="stat-label">Total Gastos</div>
+          <div class="stat-value red" id="statTotalGastos">$0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Gastos Este Mes</div>
+          <div class="stat-value amber" id="statGastosMes">$0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Promedio por Gasto</div>
+          <div class="stat-value cyan" id="statPromedioGasto">$0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Registros</div>
+          <div class="stat-value purple" id="statTotalGastosCount">0</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <h3 style="font-family:var(--font-display);font-size:14px;letter-spacing:1px;">Historial de Gastos</h3>
+          <span class="tag-count" id="tagCountGastos">0</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Fecha</th><th>Descripción</th><th>Categoría</th><th>Monto</th><th>Acciones</th></tr></thead>
+            <tbody id="gastosBody"></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="gastosEmpty" style="display:none;">
+          <div class="glyph">⬡</div>
+          Sin gastos registrados.
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTABILIDAD -->
+    <section id="contabilidad" class="section">
+      <div class="page-title">Contabilidad</div>
+      <div class="page-sub">CONTROL DE INGRESOS, GASTOS Y FLUJO DE CAJA</div>
+
+      <!-- Selector de Mes/Año -->
+      <div class="toolbar" style="margin-bottom:20px;">
+        <div class="btn-row">
+          <select id="contabMes" class="search-input" style="min-width:120px;">
+            <option value="">Todos los meses</option>
+            <option value="01">Enero</option>
+            <option value="02">Febrero</option>
+            <option value="03">Marzo</option>
+            <option value="04">Abril</option>
+            <option value="05">Mayo</option>
+            <option value="06">Junio</option>
+            <option value="07">Julio</option>
+            <option value="08">Agosto</option>
+            <option value="09">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
+          </select>
+          <select id="contabAnio" class="search-input" style="min-width:100px;">
+            <option value="">Todos los años</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- TOTALES GENERALES -->
+      <div class="grid grid-4" style="margin-bottom:22px;">
+        <div class="stat-card">
+          <div class="stat-label">Total Facturado</div>
+          <div class="stat-value cyan" id="cIngresado">$0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Gastos</div>
+          <div class="stat-value red" id="cGastos">$0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Utilidad Neta</div>
+          <div class="stat-value green" id="cUtilidad">$0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Saldo Pendiente</div>
+          <div class="stat-value amber" id="cPendiente">$0</div>
+        </div>
+      </div>
+
+      <!-- RESUMEN MENSUAL -->
+      <div class="card">
+        <h3 style="font-family:var(--font-display);font-size:14px;letter-spacing:1px;margin-bottom:14px;">Resumen Mes a Mes</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Mes</th>
+                <th style="text-align:right;">Ingresos</th>
+                <th style="text-align:right;">Gastos</th>
+                <th style="text-align:right;">Utilidad</th>
+                <th style="text-align:right;">Margen %</th>
+                <th style="text-align:right;">Órdenes</th>
+              </tr>
+            </thead>
+            <tbody id="resumenMensualBody"></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="resumenMensualEmpty" style="display:none;">
+          <div class="glyph">⬡</div>
+          Sin datos para mostrar.
+        </div>
+      </div>
+
+      <!-- DETALLES FINANCIEROS POR ORDEN -->
+      <div class="card" style="margin-top:20px;">
+        <h3 style="font-family:var(--font-display);font-size:14px;letter-spacing:1px;margin-bottom:14px;">Detalle de Órdenes</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>N° OT</th>
+                <th>Cliente</th>
+                <th style="text-align:right;">Total</th>
+                <th style="text-align:right;">Abonado</th>
+                <th style="text-align:right;">Saldo</th>
+                <th>Estado Pago</th>
+              </tr>
+            </thead>
+            <tbody id="contabilidadOrdenesBody"></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="contabilidadOrdenesEmpty" style="display:none;">
+          <div class="glyph">⬡</div>
+          Sin órdenes registradas.
+        </div>
+      </div>
+
+      <!-- DETALLES DE GASTOS POR MES -->
+      <div class="card" style="margin-top:20px;">
+        <h3 style="font-family:var(--font-display);font-size:14px;letter-spacing:1px;margin-bottom:14px;">Detalle de Gastos</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Descripción</th>
+                <th>Categoría</th>
+                <th style="text-align:right;">Monto</th>
+              </tr>
+            </thead>
+            <tbody id="contabilidadGastosBody"></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="contabilidadGastosEmpty" style="display:none;">
+          <div class="glyph">⬡</div>
+          Sin gastos registrados.
+        </div>
+      </div>
+    </section>
+
+    <!-- EMPRESA -->
+    <section id="empresa" class="section">
+      <div class="page-title">Datos de la Empresa</div>
+      <div class="page-sub">INFORMACIÓN DE CONTACTO Y CONFIGURACIÓN</div>
+
+      <div class="card" style="max-width:600px;">
+        <h3 style="font-family:var(--font-display);font-size:14px;letter-spacing:1px;margin-bottom:14px;">Logo de la Empresa</h3>
+        <div style="display:flex;gap:12px;margin-bottom:14px;align-items:flex-start;">
+          <div style="width:120px;height:120px;border:2px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;background:var(--bg-elev);">
+            <img id="empresaLogoPreview" src="" style="max-width:100%;max-height:100%;object-fit:contain;display:none;">
+            <div id="empresaLogoPlaceholder" style="text-align:center;color:var(--text-faint);font-size:12px;">Sin logo</div>
+          </div>
+          <div style="flex:1;">
+            <input type="file" id="empresaLogoInput" accept="image/*" style="display:none;" onchange="cargarLogo(event)">
+            <button class="btn btn-primary" onclick="document.getElementById('empresaLogoInput').click()" style="margin-bottom:8px;">Seleccionar Logo</button>
+            <p class="mini">Formatos: JPG, PNG (máx 200x200px recomendado)</p>
+            <button class="btn btn-sm btn-danger" onclick="limpiarLogo()" id="btnLimpiarLogo" style="display:none;">Eliminar Logo</button>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="field"><label>Nombre de la empresa</label><input type="text" id="empresaNombre" placeholder="Ej: TechServ Pro Chile"></div>
+        <div class="field"><label>RUT de la empresa</label><input type="text" id="empresaRut" placeholder="12.345.678-9"></div>
+        <div class="field"><label>Dirección comercial</label><input type="text" id="empresaDireccion" placeholder="Calle, número, comuna, ciudad"></div>
+        <div class="field-row">
+          <div class="field"><label>Teléfono</label><input type="text" id="empresaTelefono" placeholder="+56 2 1234 5678"></div>
+          <div class="field"><label>Email</label><input type="email" id="empresaEmail" placeholder="contacto@empresa.cl"></div>
+        </div>
+        <div class="field"><label>Sitio web / Redes sociales</label><input type="text" id="empresaWeb" placeholder="www.empresa.cl | @empresa"></div>
+        <div class="field"><label>Notas adicionales</label><textarea id="empresaNotas" placeholder="Horario de atención, garantía, políticas..."></textarea></div>
+        <button class="btn btn-primary" onclick="guardarEmpresa()" style="margin-top:8px;">Guardar Datos de la Empresa</button>
+      </div>
+    </section>
+
+    <!-- RESPALDOS -->
+    <section id="respaldos" class="section">
+      <div class="page-title">Respaldos</div>
+      <div class="page-sub">EXPORTAR E IMPORTAR DATOS DEL SISTEMA</div>
+
+      <div class="grid grid-2">
+        <div class="card">
+          <h3 style="font-family:var(--font-display);font-size:14px;letter-spacing:1px;margin-bottom:10px;">Descargar Respaldo</h3>
+          <p class="mini" style="margin-bottom:16px;line-height:1.6;">
+            Genera un archivo .json con todos los clientes y órdenes de trabajo almacenados localmente en este navegador. Guárdalo en un lugar seguro.
+          </p>
+          <button class="btn btn-primary" onclick="descargarRespaldo()">⬇ Descargar Respaldo (.json)</button>
+        </div>
+        <div class="card">
+          <h3 style="font-family:var(--font-display);font-size:14px;letter-spacing:1px;margin-bottom:10px;">Restaurar Respaldo</h3>
+          <p class="mini" style="margin-bottom:16px;line-height:1.6;">
+            Carga un archivo .json de respaldo previamente descargado. Esto <strong style="color:var(--red);">reemplazará</strong> todos los datos actuales.
+          </p>
+          <input type="file" id="fileRestaurar" accept="application/json" style="display:none;" onchange="restaurarRespaldo(event)">
+          <button class="btn" onclick="document.getElementById('fileRestaurar').click()">⬆ Seleccionar archivo</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px;">
+        <h3 style="font-family:var(--font-display);font-size:14px;letter-spacing:1px;margin-bottom:10px;color:var(--red);">Zona de Riesgo</h3>
+        <p class="mini" style="margin-bottom:16px;">Elimina permanentemente todos los datos almacenados en este navegador.</p>
+        <button class="btn btn-danger" onclick="borrarTodo()">Borrar todos los datos</button>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<!-- MODAL CLIENTE -->
+<div class="modal-overlay" id="modalCliente">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="clienteModalTitle">Nuevo Cliente</h2>
+      <button class="modal-close" onclick="closeModal('modalCliente')">✕</button>
+    </div>
+    <input type="hidden" id="clienteId">
+    <div class="field"><label>Nombre completo</label><input type="text" id="clienteNombre" placeholder="Ej: Juan Pérez Soto"></div>
+    <div class="field-row">
+      <div class="field"><label>RUT</label><input type="text" id="clienteRut" placeholder="12.345.678-9"></div>
+      <div class="field"><label>Teléfono</label><input type="text" id="clienteTelefono" placeholder="+56 9 1234 5678"></div>
+    </div>
+    <div class="field"><label>Email</label><input type="email" id="clienteEmail" placeholder="correo@ejemplo.cl"></div>
+    <div class="field"><label>Dirección</label><input type="text" id="clienteDireccion" placeholder="Calle, número, comuna"></div>
+    <div class="btn-row" style="justify-content:flex-end;margin-top:6px;">
+      <button class="btn" onclick="closeModal('modalCliente')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarCliente()">Guardar Cliente</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ORDEN -->
+<div class="modal-overlay" id="modalOrden">
+  <div class="modal" style="max-width:680px;">
+    <div class="modal-header">
+      <h2 id="ordenModalTitle">Nueva Orden de Trabajo</h2>
+      <button class="modal-close" onclick="closeModal('modalOrden')">✕</button>
+    </div>
+    <input type="hidden" id="ordenId">
+    
+    <!-- SECCIÓN CLIENTE -->
+    <div style="background:rgba(34,211,238,0.05);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <label style="font-size:12px;color:var(--text-dim);letter-spacing:0.5px;font-weight:600;">CLIENTE</label>
+        <button type="button" class="btn btn-sm" onclick="toggleClienteNuevo()" id="btnToggleCliente">+ Nuevo cliente</button>
+      </div>
+      
+      <div id="clienteSelectDiv">
+        <select id="ordenCliente" onchange="autocompletarCliente()"></select>
+      </div>
+      
+      <div id="clienteFormDiv" style="display:none;border-top:1px solid var(--border);padding-top:10px;margin-top:10px;">
+        <div style="font-size:11px;color:var(--text-faint);margin-bottom:8px;">Ingresa los datos del cliente. Se guardará automáticamente al crear la orden.</div>
+        <div class="field"><label>Nombre completo</label><input type="text" id="ordenClienteNombre" placeholder="Ej: Juan Pérez Soto"></div>
+        <div class="field-row">
+          <div class="field"><label>RUT</label><input type="text" id="ordenClienteRut" placeholder="12.345.678-9"></div>
+          <div class="field"><label>Teléfono</label><input type="text" id="ordenClienteTelefono" placeholder="+56 9 1234 5678"></div>
+        </div>
+        <div class="field"><label>Email</label><input type="email" id="ordenClienteEmail" placeholder="correo@ejemplo.cl"></div>
+        <div class="field"><label>Dirección</label><input type="text" id="ordenClienteDireccion" placeholder="Calle, número, comuna"></div>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Categoría del dispositivo</label>
+        <select id="ordenCategoria">
+          <option value="Smartphone">Smartphone</option>
+          <option value="Notebook">Notebook / Laptop</option>
+          <option value="PC de Escritorio">PC de Escritorio</option>
+          <option value="Tablet">Tablet</option>
+          <option value="Televisor">Televisor</option>
+          <option value="Consola">Consola de Videojuegos</option>
+          <option value="Impresora">Impresora</option>
+          <option value="Otro">Otro</option>
+        </select>
+      </div>
+      <div class="field"><label>Marca / Modelo</label><input type="text" id="ordenEquipo" placeholder="Ej: Samsung Galaxy S21"></div>
+    </div>
+    <div class="field"><label>Falla reportada por el cliente</label><textarea id="ordenFalla" placeholder="Describa el problema..."></textarea></div>
+    <div class="field"><label>Diagnóstico / Observaciones técnicas</label><textarea id="ordenDiagnostico" placeholder="Opcional"></textarea></div>
+    <div class="field-row">
+      <div class="field"><label>Fecha de ingreso</label><input type="date" id="ordenFechaIngreso"></div>
+      <div class="field"><label>Fecha de salida (real o estimada)</label><input type="date" id="ordenFechaSalida"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Estado</label>
+        <select id="ordenEstado">
+          <option value="ingresado">Ingresado</option>
+          <option value="diagnostico">En Diagnóstico</option>
+          <option value="reparacion">En Reparación</option>
+          <option value="espera">Esperando Repuesto</option>
+          <option value="listo">Listo para Entrega</option>
+          <option value="entregado">Entregado</option>
+        </select>
+      </div>
+      <div class="field"><label>Técnico asignado</label><input type="text" id="ordenTecnico" placeholder="Nombre del técnico"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Costo total (CLP)</label><input type="number" id="ordenTotal" placeholder="0"></div>
+      <div class="field"><label>Abono recibido (CLP)</label><input type="number" id="ordenAbono" placeholder="0"></div>
+    </div>
+    <div class="btn-row" style="justify-content:flex-end;margin-top:6px;">
+      <button class="btn" onclick="closeModal('modalOrden')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarOrden()">Guardar Orden</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL INVENTARIO -->
+<div class="modal-overlay" id="modalInventario">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="inventarioModalTitle">Nuevo Artículo</h2>
+      <button class="modal-close" onclick="closeModal('modalInventario')">✕</button>
+    </div>
+    <input type="hidden" id="inventarioId">
+    <div class="field"><label>Nombre del artículo</label><input type="text" id="inventarioNombre" placeholder="Ej: Pantalla Samsung Galaxy S21"></div>
+    <div class="field"><label>Categoría</label><input type="text" id="inventarioCategoria" placeholder="Ej: Pantallas, Baterías, Cables, Repuestos, Etc."></div>
+    <div class="field-row">
+      <div class="field"><label>Cantidad en stock</label><input type="number" id="inventarioStock" placeholder="0" min="0"></div>
+      <div class="field"><label>Costo unitario (CLP)</label><input type="number" id="inventarioCosto" placeholder="0" min="0"></div>
+    </div>
+    <div class="field"><label>Descripción / Notas</label><textarea id="inventarioNotas" placeholder="Especificaciones, proveedor, etc."></textarea></div>
+    <div class="btn-row" style="justify-content:flex-end;margin-top:6px;">
+      <button class="btn" onclick="closeModal('modalInventario')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarInventario()">Guardar Artículo</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL GASTO -->
+<div class="modal-overlay" id="modalGasto">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="gastoModalTitle">Nuevo Gasto</h2>
+      <button class="modal-close" onclick="closeModal('modalGasto')">✕</button>
+    </div>
+    <input type="hidden" id="gastoId">
+    <div class="field"><label>Descripción del gasto</label><input type="text" id="gastoDescripcion" placeholder="Ej: Arriendo local, Servicios, Repuestos, Etc."></div>
+    <div class="field-row">
+      <div class="field"><label>Categoría</label>
+        <select id="gastoCategoria">
+          <option value="Arriendo">Arriendo / Local</option>
+          <option value="Servicios">Servicios (Luz, Agua, Internet)</option>
+          <option value="Repuestos">Repuestos / Inventario</option>
+          <option value="Herramientas">Herramientas / Equipos</option>
+          <option value="Personal">Nómina / Personal</option>
+          <option value="Transporte">Transporte / Logística</option>
+          <option value="Marketing">Marketing / Publicidad</option>
+          <option value="Mantenimiento">Mantenimiento</option>
+          <option value="Impuestos">Impuestos / Licencias</option>
+          <option value="Otro">Otro</option>
+        </select>
+      </div>
+      <div class="field"><label>Fecha</label><input type="date" id="gastoFecha"></div>
+    </div>
+    <div class="field"><label>Monto (CLP)</label><input type="number" id="gastoMonto" placeholder="0" min="0"></div>
+    <div class="field"><label>Notas / Detalles (opcional)</label><textarea id="gastoNotas" placeholder="Información adicional..."></textarea></div>
+    <div class="btn-row" style="justify-content:flex-end;margin-top:6px;">
+      <button class="btn" onclick="closeModal('modalGasto')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarGasto()">Guardar Gasto</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VISTA PREVIA CLIENTE -->
+<div class="modal-overlay" id="modalVistaCliente">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header">
+      <h2>Detalles del Cliente</h2>
+      <button class="modal-close" onclick="closeModal('modalVistaCliente')">✕</button>
+    </div>
+    <div id="vistaClienteContenido"></div>
+    <div class="btn-row" style="justify-content:flex-end;margin-top:14px;">
+      <button class="btn" onclick="closeModal('modalVistaCliente')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VISTA PREVIA ORDEN -->
+<div class="modal-overlay" id="modalVistaOrden">
+  <div class="modal" style="max-width:650px;">
+    <div class="modal-header">
+      <h2>Vista Previa Orden de Trabajo</h2>
+      <button class="modal-close" onclick="closeModal('modalVistaOrden')">✕</button>
+    </div>
+    <div id="vistaOrdenContenido" style="max-height:600px;overflow-y:auto;"></div>
+    <div class="btn-row" style="justify-content:flex-end;margin-top:14px;">
+      <button class="btn" onclick="imprimirOTDesdeVista()">🖶 Imprimir</button>
+      <button class="btn" onclick="closeModal('modalVistaOrden')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRINT DOC OT -->
+<div class="print-doc" id="printOT"></div>
+<!-- PRINT DOC FACTURA -->
+<div class="print-doc" id="printFactura"></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ========== DATA LAYER ========== */
+const DB_KEY = 'techservpro_data_v1';
+
+function loadDB(){
+  try{
+    const raw = localStorage.getItem(DB_KEY);
+    if(!raw) return { clientes: [], ordenes: [], inventario: [], gastos: [], nextOT: 1, empresa: {} };
+    const parsed = JSON.parse(raw);
+    if(!parsed.clientes) parsed.clientes = [];
+    if(!parsed.ordenes) parsed.ordenes = [];
+    if(!parsed.inventario) parsed.inventario = [];
+    if(!parsed.gastos) parsed.gastos = [];
+    if(!parsed.nextOT) parsed.nextOT = 1;
+    if(!parsed.empresa) parsed.empresa = {};
+    return parsed;
+  }catch(e){
+    console.error('Error cargando datos', e);
+    return { clientes: [], ordenes: [], inventario: [], gastos: [], nextOT: 1, empresa: {} };
+  }
+}
+
+function saveDB(){
+  try{
+    localStorage.setItem(DB_KEY, JSON.stringify(DB));
+  }catch(e){
+    showToast('⚠ Error al guardar: almacenamiento lleno o no disponible');
+    console.error(e);
+  }
+}
+
+let DB = loadDB();
+
+function uid(){ return 'id' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+function fmtCLP(n){
+  n = Number(n)||0;
+  return n.toLocaleString('es-CL', {style:'currency', currency:'CLP', maximumFractionDigits:0});
+}
+function fmtDate(d){
+  if(!d) return '—';
+  try{
+    const dt = new Date(d + 'T00:00:00');
+    return dt.toLocaleDateString('es-CL', {day:'2-digit', month:'2-digit', year:'numeric'});
+  }catch(e){ return d; }
+}
+function escapeHtml(str){
+  if(str===undefined || str===null) return '';
+  return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(window._toastTimer);
+  // Mantener visible por 3 segundos para mayor visibilidad
+  window._toastTimer = setTimeout(()=>t.classList.remove('show'), 3200);
+}
+
+/* ========== NAVIGATION ========== */
+document.querySelectorAll('.nav-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    btn.classList.add('active');
+    const section = btn.dataset.section;
+    document.getElementById(section).classList.add('active');
+    if(section === 'empresa'){
+      cargarEmpresa();
+    }
+    renderAll();
+  });
+});
+
+/* ========== MODALS ========== */
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+
+/* ========== EMPRESA ========== */
+function cargarEmpresa(){
+  if(!DB.empresa) return;
+  document.getElementById('empresaNombre').value = DB.empresa.nombre || '';
+  document.getElementById('empresaRut').value = DB.empresa.rut || '';
+  document.getElementById('empresaDireccion').value = DB.empresa.direccion || '';
+  document.getElementById('empresaTelefono').value = DB.empresa.telefono || '';
+  document.getElementById('empresaEmail').value = DB.empresa.email || '';
+  document.getElementById('empresaWeb').value = DB.empresa.web || '';
+  document.getElementById('empresaNotas').value = DB.empresa.notas || '';
+  
+  // Cargar logo
+  if(DB.empresa.logo){
+    const preview = document.getElementById('empresaLogoPreview');
+    const placeholder = document.getElementById('empresaLogoPlaceholder');
+    const btnLimpiar = document.getElementById('btnLimpiarLogo');
+    preview.src = DB.empresa.logo;
+    preview.style.display = 'block';
+    placeholder.style.display = 'none';
+    btnLimpiar.style.display = 'block';
+  } else {
+    document.getElementById('empresaLogoPreview').style.display = 'none';
+    document.getElementById('empresaLogoPlaceholder').style.display = 'block';
+    document.getElementById('btnLimpiarLogo').style.display = 'none';
+  }
+}
+
+function guardarEmpresa(){
+  const nombre = (document.getElementById('empresaNombre').value || '').trim();
+  
+  DB.empresa = {
+    nombre,
+    rut: (document.getElementById('empresaRut').value || '').trim(),
+    direccion: (document.getElementById('empresaDireccion').value || '').trim(),
+    telefono: (document.getElementById('empresaTelefono').value || '').trim(),
+    email: (document.getElementById('empresaEmail').value || '').trim(),
+    web: (document.getElementById('empresaWeb').value || '').trim(),
+    notas: (document.getElementById('empresaNotas').value || '').trim(),
+    logo: DB.empresa?.logo || null
+  };
+  
+  saveDB();
+  showToast('✓ Datos de empresa guardados correctamente');
+}
+
+function cargarLogo(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  
+  if(file.size > 500000){
+    showToast('⚠ Imagen demasiado grande (máx 500KB)');
+    return;
+  }
+  
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    const base64 = e.target.result;
+    DB.empresa = DB.empresa || {};
+    DB.empresa.logo = base64;
+    saveDB();
+    
+    const preview = document.getElementById('empresaLogoPreview');
+    const placeholder = document.getElementById('empresaLogoPlaceholder');
+    preview.src = base64;
+    preview.style.display = 'block';
+    placeholder.style.display = 'none';
+    document.getElementById('btnLimpiarLogo').style.display = 'block';
+    showToast('✓ Logo cargado correctamente');
+  };
+  reader.onerror = ()=> showToast('⚠ Error al leer archivo');
+  reader.readAsDataURL(file);
+}
+
+function limpiarLogo(){
+  if(!confirm('¿Eliminar el logo de la empresa?')) return;
+  if(DB.empresa) DB.empresa.logo = null;
+  saveDB();
+  document.getElementById('empresaLogoPreview').style.display = 'none';
+  document.getElementById('empresaLogoPlaceholder').style.display = 'block';
+  document.getElementById('btnLimpiarLogo').style.display = 'none';
+  showToast('✓ Logo eliminado');
+}
+
+/* ========== INVENTARIO ========== */
+function openInventarioModal(inventarioId){
+  document.getElementById('inventarioModalTitle').textContent = inventarioId ? 'Editar Artículo' : 'Nuevo Artículo';
+  document.getElementById('inventarioId').value = inventarioId || '';
+  
+  if(inventarioId){
+    const item = DB.inventario.find(x=>x.id===inventarioId);
+    if(item){
+      document.getElementById('inventarioNombre').value = item.nombre;
+      document.getElementById('inventarioCategoria').value = item.categoria;
+      document.getElementById('inventarioStock').value = item.stock;
+      document.getElementById('inventarioCosto').value = item.costo;
+      document.getElementById('inventarioNotas').value = item.notas || '';
+    }
+  } else {
+    ['inventarioNombre','inventarioCategoria','inventarioStock','inventarioCosto','inventarioNotas'].forEach(id=>document.getElementById(id).value='');
+  }
+  openModal('modalInventario');
+}
+
+function guardarInventario(){
+  const nombre = (document.getElementById('inventarioNombre').value || '').trim();
+  if(!nombre){ showToast('⚠ El nombre del artículo es obligatorio'); return; }
+  
+  const id = document.getElementById('inventarioId').value;
+  const data = {
+    nombre,
+    categoria: (document.getElementById('inventarioCategoria').value || '').trim(),
+    stock: Math.max(0, Number(document.getElementById('inventarioStock').value) || 0),
+    costo: Math.max(0, Number(document.getElementById('inventarioCosto').value) || 0),
+    notas: (document.getElementById('inventarioNotas').value || '').trim(),
+  };
+  
+  if(id){
+    const idx = DB.inventario.findIndex(x=>x.id===id);
+    if(idx>-1) DB.inventario[idx] = {...DB.inventario[idx], ...data};
+  } else {
+    DB.inventario.push({ id: uid(), ...data, creado: new Date().toISOString() });
+  }
+  
+  saveDB();
+  closeModal('modalInventario');
+  showToast('✓ Artículo guardado');
+  renderAll();
+}
+
+function eliminarInventario(id){
+  if(!confirm('¿Eliminar este artículo?')) return;
+  DB.inventario = DB.inventario.filter(x=>x.id!==id);
+  saveDB();
+  renderAll();
+  showToast('✓ Artículo eliminado');
+}
+
+function renderInventario(){
+  const filtro = (document.getElementById('searchInventario').value||'').toLowerCase();
+  const body = document.getElementById('inventarioBody');
+  const list = DB.inventario.filter(item=>
+    !filtro || (item.nombre||'').toLowerCase().includes(filtro) ||
+    (item.categoria||'').toLowerCase().includes(filtro)
+  );
+  
+  body.innerHTML = list.map(item=>{
+    const itemIdEsc = escapeHtml(item.id);
+    const valorTotal = item.stock * item.costo;
+    return `<tr>
+      <td>${escapeHtml(item.nombre)}</td>
+      <td>${escapeHtml(item.categoria)||'—'}</td>
+      <td>${item.stock}</td>
+      <td>${fmtCLP(item.costo)}</td>
+      <td>${fmtCLP(valorTotal)}</td>
+      <td>
+        <div class="btn-row">
+          <button class="btn btn-sm" data-item-id="${itemIdEsc}" onclick="openInventarioModal(this.dataset.itemId)">Editar</button>
+          <button class="btn btn-sm btn-danger" data-item-id="${itemIdEsc}" onclick="eliminarInventario(this.dataset.itemId)">Eliminar</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+  
+  const total = list.reduce((sum, item) => sum + (item.stock * item.costo), 0);
+  document.getElementById('inventarioTotal').textContent = fmtCLP(total);
+  document.getElementById('inventarioEmpty').style.display = list.length ? 'none' : 'block';
+}
+
+/* ========== GASTOS ========== */
+function openGastoModal(gastoId){
+  document.getElementById('gastoModalTitle').textContent = gastoId ? 'Editar Gasto' : 'Nuevo Gasto';
+  document.getElementById('gastoId').value = gastoId || '';
+  
+  if(gastoId){
+    const gasto = DB.gastos.find(x=>x.id===gastoId);
+    if(gasto){
+      document.getElementById('gastoDescripcion').value = gasto.descripcion;
+      document.getElementById('gastoCategoria').value = gasto.categoria;
+      document.getElementById('gastoFecha').value = gasto.fecha;
+      document.getElementById('gastoMonto').value = gasto.monto;
+      document.getElementById('gastoNotas').value = gasto.notas || '';
+    }
+  } else {
+    ['gastoDescripcion','gastoMonto','gastoNotas'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('gastoCategoria').value = 'Otro';
+    document.getElementById('gastoFecha').value = new Date().toISOString().slice(0,10);
+  }
+  openModal('modalGasto');
+}
+
+function guardarGasto(){
+  const descripcion = (document.getElementById('gastoDescripcion').value || '').trim();
+  if(!descripcion){ showToast('⚠ La descripción es obligatoria'); return; }
+  
+  const monto = Math.max(0, Number(document.getElementById('gastoMonto').value) || 0);
+  if(monto === 0){ showToast('⚠ Ingresa un monto válido (mayor que $0)'); return; }
+  
+  const fechaStr = document.getElementById('gastoFecha').value;
+  if(!fechaStr){ showToast('⚠ Debes seleccionar una fecha'); return; }
+  
+  // Validar que la fecha no sea más de 2 años atrás
+  const fecha = new Date(fechaStr + 'T00:00:00');
+  const ahora = new Date();
+  const hace2Anos = new Date(ahora.getFullYear() - 2, ahora.getMonth(), ahora.getDate());
+  
+  if(fecha < hace2Anos){
+    showToast('⚠ La fecha es muy antigua (máximo 2 años atrás)');
+    return;
+  }
+  
+  if(fecha > ahora){
+    showToast('⚠ La fecha no puede ser futura');
+    return;
+  }
+  
+  const id = document.getElementById('gastoId').value;
+  const data = {
+    descripcion,
+    categoria: document.getElementById('gastoCategoria').value,
+    fecha: fechaStr,
+    monto,
+    notas: (document.getElementById('gastoNotas').value || '').trim(),
+  };
+  
+  if(id){
+    const idx = DB.gastos.findIndex(x=>x.id===id);
+    if(idx>-1) DB.gastos[idx] = {...DB.gastos[idx], ...data};
+  } else {
+    DB.gastos.push({ id: uid(), ...data, creado: new Date().toISOString() });
+  }
+  
+  saveDB();
+  closeModal('modalGasto');
+  showToast('✓ Gasto guardado correctamente');
+  renderAll();
+}
+
+function eliminarGasto(id){
+  if(!confirm('¿Eliminar este gasto?')) return;
+  DB.gastos = DB.gastos.filter(x=>x.id!==id);
+  saveDB();
+  renderAll();
+  showToast('✓ Gasto eliminado');
+}
+
+function renderGastos(){
+  const filtro = (document.getElementById('searchGastos').value||'').toLowerCase();
+  const mesFiltro = document.getElementById('filterGastosMes').value;
+  const body = document.getElementById('gastosBody');
+  let list = [...DB.gastos].sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+  
+  list = list.filter(g=>{
+    const matchesText = !filtro || (g.descripcion||'').toLowerCase().includes(filtro) ||
+                        (g.categoria||'').toLowerCase().includes(filtro);
+    const matchesMes = !mesFiltro || (g.fecha||'').slice(5,7) === mesFiltro;
+    return matchesText && matchesMes;
+  });
+
+  body.innerHTML = list.map(g=>{
+    const gastoIdEsc = escapeHtml(g.id);
+    return `<tr>
+      <td>${fmtDate(g.fecha)}</td>
+      <td>${escapeHtml(g.descripcion)}</td>
+      <td><span class="badge badge-ingresado">${escapeHtml(g.categoria)}</span></td>
+      <td style="color:var(--red);font-weight:600;">${fmtCLP(g.monto)}</td>
+      <td>
+        <div class="btn-row">
+          <button class="btn btn-sm" data-gasto-id="${gastoIdEsc}" onclick="openGastoModal(this.dataset.gastoId)">Editar</button>
+          <button class="btn btn-sm btn-danger" data-gasto-id="${gastoIdEsc}" onclick="eliminarGasto(this.dataset.gastoId)">Eliminar</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Calcular estadísticas
+  const totalGastos = DB.gastos.reduce((sum, g) => sum + (Number(g.monto)||0), 0);
+  const ahora = new Date();
+  const mesActual = String(ahora.getMonth() + 1).padStart(2, '0');
+  const gastosMes = list.filter(g => (g.fecha||'').slice(5,7) === mesActual)
+    .reduce((sum, g) => sum + (Number(g.monto)||0), 0);
+  const promedioGasto = DB.gastos.length > 0 ? totalGastos / DB.gastos.length : 0;
+
+  document.getElementById('statTotalGastos').textContent = fmtCLP(totalGastos);
+  document.getElementById('statGastosMes').textContent = fmtCLP(gastosMes);
+  document.getElementById('statPromedioGasto').textContent = fmtCLP(promedioGasto);
+  document.getElementById('statTotalGastosCount').textContent = DB.gastos.length;
+  document.getElementById('tagCountGastos').textContent = list.length;
+  
+  document.getElementById('gastosEmpty').style.display = list.length ? 'none' : 'block';
+}
+
+
+function vistaClienteModal(clienteId){
+  const cliente = DB.clientes.find(c=>c.id===clienteId);
+  if(!cliente) return;
+  
+  const numOrdenes = DB.ordenes.filter(o=>o.clienteId===clienteId).length;
+  
+  const html = `
+    <div style="background:var(--bg-elev);border-radius:8px;padding:16px;margin-bottom:12px;">
+      <div style="font-size:11px;color:var(--text-faint);letter-spacing:1px;text-transform:uppercase;font-family:var(--font-mono);">Información Personal</div>
+      <div style="margin-top:12px;">
+        <div style="margin-bottom:8px;"><span style="color:var(--text-faint);">Nombre:</span> <strong>${escapeHtml(cliente.nombre)}</strong></div>
+        <div style="margin-bottom:8px;"><span style="color:var(--text-faint);">RUT:</span> <strong>${escapeHtml(cliente.rut)||'—'}</strong></div>
+        <div style="margin-bottom:8px;"><span style="color:var(--text-faint);">Teléfono:</span> <strong>${escapeHtml(cliente.telefono)||'—'}</strong></div>
+        <div style="margin-bottom:8px;"><span style="color:var(--text-faint);">Email:</span> <strong>${escapeHtml(cliente.email)||'—'}</strong></div>
+        <div style="margin-bottom:8px;"><span style="color:var(--text-faint);">Dirección:</span> <strong>${escapeHtml(cliente.direccion)||'—'}</strong></div>
+      </div>
+    </div>
+    <div style="background:var(--bg-elev);border-radius:8px;padding:16px;">
+      <div style="font-size:11px;color:var(--text-faint);letter-spacing:1px;text-transform:uppercase;font-family:var(--font-mono);">Resumen</div>
+      <div style="margin-top:12px;">
+        <div style="display:flex;justify-content:space-between;">
+          <span>Órdenes registradas:</span>
+          <strong style="color:var(--cyan);">${numOrdenes}</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:8px;">
+          <span>Registrado:</span>
+          <strong>${fmtDate(cliente.creado)}</strong>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  document.getElementById('vistaClienteContenido').innerHTML = html;
+  openModal('modalVistaCliente');
+}
+
+function vistaOrdenModal(ordenId){
+  const orden = DB.ordenes.find(o=>o.id===ordenId);
+  if(!orden) return;
+  const cliente = DB.clientes.find(c=>c.id===orden.clienteId) || {};
+  
+  const saldo = (Number(orden.total)||0) - (Number(orden.abono)||0);
+  
+  const html = `
+    <div style="background:var(--bg-elev);border-radius:8px;padding:14px;margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <div style="font-size:11px;color:var(--text-faint);letter-spacing:1px;font-family:var(--font-mono);">ORDEN DE TRABAJO</div>
+          <div style="font-family:var(--font-mono);font-size:18px;color:var(--cyan);font-weight:bold;margin-top:4px;">OT-${orden.numeroOT}</div>
+        </div>
+        <span class="badge badge-${orden.estado}">${ESTADO_LABELS[orden.estado]||orden.estado}</span>
+      </div>
+    </div>
+    
+    <div style="background:var(--bg-elev);border-radius:8px;padding:14px;margin-bottom:12px;">
+      <div style="font-size:11px;color:var(--text-faint);letter-spacing:1px;text-transform:uppercase;font-family:var(--font-mono);margin-bottom:10px;">Cliente</div>
+      <div><strong>${escapeHtml(cliente.nombre)}</strong></div>
+      <div style="font-size:12px;color:var(--text-dim);margin-top:4px;">RUT: ${escapeHtml(cliente.rut)||'—'} | Tel: ${escapeHtml(cliente.telefono)||'—'}</div>
+    </div>
+    
+    <div style="background:var(--bg-elev);border-radius:8px;padding:14px;margin-bottom:12px;">
+      <div style="font-size:11px;color:var(--text-faint);letter-spacing:1px;text-transform:uppercase;font-family:var(--font-mono);margin-bottom:10px;">Equipo</div>
+      <div><strong>${escapeHtml(orden.categoria)} - ${escapeHtml(orden.equipo)}</strong></div>
+      <div style="font-size:12px;color:var(--text-dim);margin-top:6px;"><strong>Falla:</strong> ${escapeHtml(orden.falla)}</div>
+      ${orden.diagnostico?`<div style="font-size:12px;color:var(--text-dim);margin-top:4px;"><strong>Diagnóstico:</strong> ${escapeHtml(orden.diagnostico)}</div>`:''}
+    </div>
+    
+    <div style="background:var(--bg-elev);border-radius:8px;padding:14px;margin-bottom:12px;">
+      <div style="font-size:11px;color:var(--text-faint);letter-spacing:1px;text-transform:uppercase;font-family:var(--font-mono);margin-bottom:10px;">Fechas</div>
+      <div style="display:flex;justify-content:space-between;">
+        <div><span style="color:var(--text-faint);">Ingreso:</span> <strong>${fmtDate(orden.fechaIngreso)}</strong></div>
+        <div><span style="color:var(--text-faint);">Salida:</span> <strong>${fmtDate(orden.fechaSalida)}</strong></div>
+      </div>
+    </div>
+    
+    <div style="background:var(--bg-elev);border-radius:8px;padding:14px;">
+      <div style="font-size:11px;color:var(--text-faint);letter-spacing:1px;text-transform:uppercase;font-family:var(--font-mono);margin-bottom:10px;">Financiero</div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <span>Total:</span>
+        <strong style="color:var(--cyan);">${fmtCLP(orden.total)}</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <span>Abonado:</span>
+        <strong style="color:var(--green);">${fmtCLP(orden.abono)}</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid var(--border);">
+        <span><strong>Saldo:</strong></span>
+        <strong style="color:var(--amber);">${fmtCLP(saldo)}</strong>
+      </div>
+    </div>
+  `;
+  
+  document.getElementById('vistaOrdenContenido').innerHTML = html;
+  openModal('modalVistaOrden');
+}
+
+function imprimirOTDesdeVista(){
+  // Esta función se llama desde el modal de vista previa
+  // Guardamos el ID de la orden siendo visualizada
+  const contenido = document.getElementById('vistaOrdenContenido').innerHTML;
+  // Extraer número de OT del contenido
+  const match = contenido.match(/OT-(\d+)/);
+  if(match){
+    const numeroOT = match[1];
+    const orden = DB.ordenes.find(o => o.numeroOT === numeroOT);
+    if(orden){
+      closeModal('modalVistaOrden');
+      setTimeout(() => imprimirOT(orden.id), 300);
+    }
+  } else {
+    showToast('⚠ No se pudo identificar la orden');
+  }
+}
+
+
+/* ========== CLIENTE INLINE EN ORDEN ========== */
+function toggleClienteNuevo(){
+  const selectDiv = document.getElementById('clienteSelectDiv');
+  const formDiv = document.getElementById('clienteFormDiv');
+  const btn = document.getElementById('btnToggleCliente');
+  
+  if(formDiv.style.display === 'none'){
+    selectDiv.style.display = 'none';
+    formDiv.style.display = 'block';
+    btn.textContent = '← Seleccionar existente';
+    document.getElementById('ordenClienteNombre').focus();
+  } else {
+    selectDiv.style.display = 'block';
+    formDiv.style.display = 'none';
+    btn.textContent = '+ Nuevo cliente';
+  }
+}
+
+function autocompletarCliente(){
+  const clienteId = document.getElementById('ordenCliente').value || '';
+  const formDiv = document.getElementById('clienteFormDiv');
+  const btnToggle = document.getElementById('btnToggleCliente');
+  
+  if(!clienteId){
+    // Sin cliente seleccionado
+    formDiv.style.display = 'none';
+    ['ordenClienteNombre','ordenClienteRut','ordenClienteTelefono','ordenClienteEmail','ordenClienteDireccion'].forEach(id=>document.getElementById(id).value='');
+    btnToggle.style.display = 'block';
+    return;
+  }
+  
+  const cliente = DB.clientes.find(c => c.id === clienteId);
+  if(cliente){
+    // Auto-rellenar datos del cliente existente
+    document.getElementById('ordenClienteNombre').value = cliente.nombre || '';
+    document.getElementById('ordenClienteRut').value = cliente.rut || '';
+    document.getElementById('ordenClienteTelefono').value = cliente.telefono || '';
+    document.getElementById('ordenClienteEmail').value = cliente.email || '';
+    document.getElementById('ordenClienteDireccion').value = cliente.direccion || '';
+    formDiv.style.display = 'none';
+    btnToggle.style.display = 'block';
+  } else {
+    // Cliente no encontrado (posible error de datos)
+    formDiv.style.display = 'none';
+    ['ordenClienteNombre','ordenClienteRut','ordenClienteTelefono','ordenClienteEmail','ordenClienteDireccion'].forEach(id=>document.getElementById(id).value='');
+    btnToggle.style.display = 'block';
+  }
+}
+
+/* ========== CLIENTES ========== */
+function openClienteModal(clienteId){
+  document.getElementById('clienteModalTitle').textContent = clienteId ? 'Editar Cliente' : 'Nuevo Cliente';
+  document.getElementById('clienteId').value = clienteId || '';
+  if(clienteId){
+    const c = DB.clientes.find(x=>x.id===clienteId);
+    if(c){
+      document.getElementById('clienteNombre').value = c.nombre||'';
+      document.getElementById('clienteRut').value = c.rut||'';
+      document.getElementById('clienteTelefono').value = c.telefono||'';
+      document.getElementById('clienteEmail').value = c.email||'';
+      document.getElementById('clienteDireccion').value = c.direccion||'';
+    }
+  } else {
+    ['clienteNombre','clienteRut','clienteTelefono','clienteEmail','clienteDireccion'].forEach(id=>document.getElementById(id).value='');
+  }
+  openModal('modalCliente');
+}
+
+function guardarCliente(){
+  const nombre = (document.getElementById('clienteNombre').value || '').trim();
+  if(!nombre){ 
+    showToast('⚠ El nombre del cliente es obligatorio'); 
+    return; 
+  }
+  
+  const id = document.getElementById('clienteId').value;
+  const data = {
+    nombre,
+    rut: (document.getElementById('clienteRut').value || '').trim(),
+    telefono: (document.getElementById('clienteTelefono').value || '').trim(),
+    email: (document.getElementById('clienteEmail').value || '').trim(),
+    direccion: (document.getElementById('clienteDireccion').value || '').trim(),
+  };
+  
+  if(id){
+    // Editar existente
+    const idx = DB.clientes.findIndex(x=>x.id===id);
+    if(idx>-1) {
+      DB.clientes[idx] = {...DB.clientes[idx], ...data};
+    }
+  } else {
+    // Crear nuevo
+    DB.clientes.push({ id: uid(), ...data, creado: new Date().toISOString() });
+  }
+  
+  saveDB();
+  closeModal('modalCliente');
+  showToast('✓ Cliente guardado correctamente');
+  renderAll();
+}
+
+function eliminarCliente(id){
+  const tieneOrdenes = DB.ordenes.some(o=>o.clienteId===id);
+  if(tieneOrdenes){
+    showToast('⚠ No se puede eliminar: el cliente tiene órdenes asociadas');
+    return;
+  }
+  if(!confirm('¿Eliminar este cliente?')) return;
+  DB.clientes = DB.clientes.filter(x=>x.id!==id);
+  saveDB();
+  renderAll();
+  showToast('✓ Cliente eliminado');
+}
+
+function renderClientes(){
+  const filtro = (document.getElementById('searchClientes').value||'').toLowerCase();
+  const body = document.getElementById('clientesBody');
+  const list = DB.clientes.filter(c=>
+    !filtro || (c.nombre||'').toLowerCase().includes(filtro) ||
+    (c.rut||'').toLowerCase().includes(filtro) ||
+    (c.telefono||'').toLowerCase().includes(filtro)
+  );
+  
+  body.innerHTML = list.map(c=>{
+    const numOrdenes = DB.ordenes.filter(o=>o.clienteId===c.id).length;
+    const clienteIdEsc = escapeHtml(c.id);
+    return `<tr>
+      <td>${escapeHtml(c.nombre)}</td>
+      <td>${escapeHtml(c.rut)||'—'}</td>
+      <td>${escapeHtml(c.telefono)||'—'}</td>
+      <td>${escapeHtml(c.email)||'—'}</td>
+      <td><span class="tag-count">${numOrdenes}</span></td>
+      <td>
+        <div class="btn-row">
+          <button class="btn btn-sm" data-client-id="${clienteIdEsc}" onclick="vistaClienteModal(this.dataset.clientId)">👁 Ver</button>
+          <button class="btn btn-sm" data-client-id="${clienteIdEsc}" onclick="openClienteModal(this.dataset.clientId)">Editar</button>
+          <button class="btn btn-sm btn-danger" data-client-id="${clienteIdEsc}" onclick="eliminarCliente(this.dataset.clientId)">Eliminar</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+  document.getElementById('clientesEmpty').style.display = list.length ? 'none' : 'block';
+}
+
+/* ========== ORDENES ========== */
+function refreshClienteSelect(){
+  const sel = document.getElementById('ordenCliente');
+  if(!sel) return;
+  const current = sel.value || '';
+  
+  if(DB.clientes.length === 0){
+    sel.innerHTML = '<option value="">— Sin clientes registrados —</option>';
+    return;
+  }
+  
+  const options = DB.clientes.map(c=>`<option value="${c.id}">${escapeHtml(c.nombre)}${c.rut?' — '+escapeHtml(c.rut):''}</option>`).join('');
+  sel.innerHTML = '<option value="">Seleccionar cliente...</option>' + options;
+  
+  if(current && sel.querySelector(`option[value="${current}"]`)){
+    sel.value = current;
+  }
+}
+
+function openOrdenModal(ordenId){
+  refreshClienteSelect();
+  document.getElementById('ordenModalTitle').textContent = ordenId ? 'Editar Orden de Trabajo' : 'Nueva Orden de Trabajo';
+  document.getElementById('ordenId').value = ordenId || '';
+  
+  // Reset cliente form
+  document.getElementById('clienteSelectDiv').style.display = 'block';
+  document.getElementById('clienteFormDiv').style.display = 'none';
+  document.getElementById('btnToggleCliente').textContent = '+ Nuevo cliente';
+  ['ordenClienteNombre','ordenClienteRut','ordenClienteTelefono','ordenClienteEmail','ordenClienteDireccion'].forEach(id=>document.getElementById(id).value='');
+  
+  if(ordenId){
+    const o = DB.ordenes.find(x=>x.id===ordenId);
+    if(o){
+      document.getElementById('ordenCliente').value = o.clienteId;
+      autocompletarCliente();
+      document.getElementById('ordenCategoria').value = o.categoria;
+      document.getElementById('ordenEquipo').value = o.equipo;
+      document.getElementById('ordenFalla').value = o.falla;
+      document.getElementById('ordenDiagnostico').value = o.diagnostico||'';
+      document.getElementById('ordenFechaIngreso').value = o.fechaIngreso||'';
+      document.getElementById('ordenFechaSalida').value = o.fechaSalida||'';
+      document.getElementById('ordenEstado').value = o.estado;
+      document.getElementById('ordenTecnico').value = o.tecnico||'';
+      document.getElementById('ordenTotal').value = o.total||0;
+      document.getElementById('ordenAbono').value = o.abono||0;
+    }
+  } else {
+    document.getElementById('ordenCliente').value = '';
+    ['ordenEquipo','ordenFalla','ordenDiagnostico','ordenFechaSalida','ordenTecnico'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('ordenTotal').value = '';
+    document.getElementById('ordenAbono').value = '';
+    document.getElementById('ordenEstado').value = 'ingresado';
+    document.getElementById('ordenFechaIngreso').value = new Date().toISOString().slice(0,10);
+  }
+  openModal('modalOrden');
+  // Auto-focus en cliente select
+  setTimeout(() => document.getElementById('ordenCliente').focus(), 200);
+}
+
+function guardarOrden(){
+  const equipo = (document.getElementById('ordenEquipo').value || '').trim();
+  if(!equipo){ 
+    showToast('⚠ Ingresa la marca/modelo del equipo'); 
+    document.getElementById('ordenEquipo').focus();
+    return; 
+  }
+
+  const falla = (document.getElementById('ordenFalla').value || '').trim();
+  if(!falla){
+    showToast('⚠ Describe la falla o problema del equipo');
+    document.getElementById('ordenFalla').focus();
+    return;
+  }
+
+  let clienteId = document.getElementById('ordenCliente').value || '';
+  const clienteNombre = (document.getElementById('ordenClienteNombre').value || '').trim();
+  
+  // Si es cliente nuevo (formulario visible y nombre ingresado)
+  if(document.getElementById('clienteFormDiv').style.display !== 'none' && clienteNombre){
+    // Cliente nuevo debe tener al menos nombre
+    const nuevoCliente = {
+      id: uid(),
+      nombre: clienteNombre,
+      rut: (document.getElementById('ordenClienteRut').value || '').trim(),
+      telefono: (document.getElementById('ordenClienteTelefono').value || '').trim(),
+      email: (document.getElementById('ordenClienteEmail').value || '').trim(),
+      direccion: (document.getElementById('ordenClienteDireccion').value || '').trim(),
+      creado: new Date().toISOString()
+    };
+    DB.clientes.push(nuevoCliente);
+    clienteId = nuevoCliente.id;
+  } else if(!clienteId){
+    showToast('⚠ Selecciona un cliente o ingresa uno nuevo');
+    return;
+  }
+
+  // Validar que el cliente existe
+  if(!DB.clientes.find(c => c.id === clienteId)){
+    showToast('⚠ Cliente inválido');
+    return;
+  }
+
+  const id = document.getElementById('ordenId').value;
+  const total = Math.max(0, Number(document.getElementById('ordenTotal').value) || 0);
+  const abono = Math.max(0, Number(document.getElementById('ordenAbono').value) || 0);
+  
+  // Validar que abono no sea mayor que total
+  if(total > 0 && abono > total){
+    showToast('⚠ El abono no puede ser mayor que el total');
+    return;
+  }
+
+  const data = {
+    clienteId,
+    categoria: document.getElementById('ordenCategoria').value,
+    equipo,
+    falla,
+    diagnostico: (document.getElementById('ordenDiagnostico').value || '').trim(),
+    fechaIngreso: document.getElementById('ordenFechaIngreso').value,
+    fechaSalida: document.getElementById('ordenFechaSalida').value,
+    estado: document.getElementById('ordenEstado').value,
+    tecnico: (document.getElementById('ordenTecnico').value || '').trim(),
+    total,
+    abono,
+  };
+
+  if(id){
+    const idx = DB.ordenes.findIndex(x=>x.id===id);
+    if(idx>-1) DB.ordenes[idx] = {...DB.ordenes[idx], ...data};
+  } else {
+    const numeroOT = String(DB.nextOT).padStart(5,'0');
+    DB.nextOT++;
+    DB.ordenes.push({ id: uid(), numeroOT, ...data, creado: new Date().toISOString() });
+  }
+  saveDB();
+  closeModal('modalOrden');
+  showToast('✓ Orden de trabajo guardada correctamente');
+  renderAll();
+}
+
+function eliminarOrden(id){
+  if(!confirm('¿Eliminar esta orden de trabajo?')) return;
+  DB.ordenes = DB.ordenes.filter(x=>x.id!==id);
+  saveDB();
+  renderAll();
+  showToast('✓ Orden eliminada');
+}
+
+const ESTADO_LABELS = {
+  ingresado:'Ingresado', diagnostico:'En Diagnóstico', reparacion:'En Reparación',
+  espera:'Esperando Repuesto', listo:'Listo p/ Entrega', entregado:'Entregado'
+};
+
+function clienteNombre(clienteId){
+  const c = DB.clientes.find(x=>x.id===clienteId);
+  return c ? c.nombre : '(cliente eliminado)';
+}
+
+function renderOrdenes(){
+  const filtro = (document.getElementById('searchOrdenes').value||'').toLowerCase();
+  const estadoFiltro = document.getElementById('filterEstado').value;
+  const body = document.getElementById('ordenesBody');
+  let list = [...DB.ordenes].sort((a,b)=> (b.creado||'').localeCompare(a.creado||''));
+  list = list.filter(o=>{
+    const cn = clienteNombre(o.clienteId).toLowerCase();
+    const matchesText = !filtro || o.numeroOT.includes(filtro) || cn.includes(filtro) || (o.equipo||'').toLowerCase().includes(filtro);
+    const matchesEstado = !estadoFiltro || o.estado===estadoFiltro;
+    return matchesText && matchesEstado;
+  });
+
+  body.innerHTML = list.map(o=>{
+    const ordenIdEsc = escapeHtml(o.id);
+    return `<tr>
+      <td style="font-family:var(--font-mono);color:var(--cyan);">OT-${o.numeroOT}</td>
+      <td>${escapeHtml(clienteNombre(o.clienteId))}</td>
+      <td>${escapeHtml(o.categoria)}</td>
+      <td>${escapeHtml(o.equipo)}</td>
+      <td>${fmtDate(o.fechaIngreso)}</td>
+      <td>${fmtDate(o.fechaSalida)}</td>
+      <td><span class="badge badge-${o.estado}">${ESTADO_LABELS[o.estado]||o.estado}</span></td>
+      <td>${fmtCLP(o.total)}</td>
+      <td>
+        <div class="btn-row">
+          <button class="btn btn-sm" data-orden-id="${ordenIdEsc}" onclick="vistaOrdenModal(this.dataset.ordenId)">👁 Ver</button>
+          <button class="btn btn-sm" data-orden-id="${ordenIdEsc}" onclick="openOrdenModal(this.dataset.ordenId)">Editar</button>
+          <button class="btn btn-sm" data-orden-id="${ordenIdEsc}" onclick="imprimirOT(this.dataset.ordenId)">🖶 OT</button>
+          <button class="btn btn-sm btn-danger" data-orden-id="${ordenIdEsc}" onclick="eliminarOrden(this.dataset.ordenId)">✕</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+  document.getElementById('ordenesEmpty').style.display = list.length ? 'none' : 'block';
+}
+
+/* ========== DASHBOARD ========== */
+function renderDashboard(){
+  const activas = DB.ordenes.filter(o=>o.estado!=='entregado').length;
+  const listas = DB.ordenes.filter(o=>o.estado==='listo').length;
+  document.getElementById('statActivas').textContent = activas;
+  document.getElementById('statListas').textContent = listas;
+  document.getElementById('statClientes').textContent = DB.clientes.length;
+
+  const now = new Date();
+  const mesActual = String(now.getMonth() + 1).padStart(2, '0');
+  const anioActual = now.getFullYear();
+  
+  // Usar fechaSalida para calcular ingresos realizados (no ingreso de orden)
+  const ingresosMes = DB.ordenes.reduce((sum,o)=>{
+    if(!o.fechaSalida || !o.abono) return sum;
+    const d = new Date(o.fechaSalida+'T00:00:00');
+    const mesOrden = String(d.getMonth() + 1).padStart(2, '0');
+    const anioOrden = d.getFullYear();
+    if(mesOrden === mesActual && anioOrden === anioActual){
+      return sum + (Number(o.abono)||0);
+    }
+    return sum;
+  },0);
+  document.getElementById('statIngresos').textContent = fmtCLP(ingresosMes);
+
+  const recientes = [...DB.ordenes].sort((a,b)=>(b.creado||'').localeCompare(a.creado||'')).slice(0,6);
+  document.getElementById('tagCountDash').textContent = DB.ordenes.length;
+  document.getElementById('dashOrdersBody').innerHTML = recientes.length ? recientes.map(o=>`
+    <tr>
+      <td style="font-family:var(--font-mono);color:var(--cyan);">OT-${o.numeroOT}</td>
+      <td>${escapeHtml(clienteNombre(o.clienteId))}</td>
+      <td>${escapeHtml(o.equipo)}</td>
+      <td>${fmtDate(o.fechaIngreso)}</td>
+      <td><span class="badge badge-${o.estado}">${ESTADO_LABELS[o.estado]||o.estado}</span></td>
+    </tr>
+  `).join('') : `<tr><td colspan="5" style="text-align:center;color:var(--text-faint);padding:24px;">Sin órdenes registradas todavía</td></tr>`;
+}
+
+/* ========== CONTABILIDAD ========== */
+function renderContabilidad(){
+  initContabilidadSelectores();
+  
+  const mesFiltro = document.getElementById('contabMes').value;
+  const anioFiltro = document.getElementById('contabAnio').value;
+  
+  // Calcular totales generales
+  const totalFacturado = DB.ordenes.reduce((s,o)=>s+(Number(o.total)||0),0);
+  const totalGastos = DB.gastos.reduce((s,g)=>s+(Number(g.monto)||0),0);
+  const utilidad = totalFacturado - totalGastos;
+  const pendiente = DB.ordenes.reduce((s,o)=>s+((Number(o.total)||0)-(Number(o.abono)||0)),0);
+  
+  document.getElementById('cIngresado').textContent = fmtCLP(totalFacturado);
+  document.getElementById('cGastos').textContent = fmtCLP(totalGastos);
+  document.getElementById('cUtilidad').textContent = fmtCLP(utilidad);
+  document.getElementById('cPendiente').textContent = fmtCLP(pendiente);
+  
+  // Agrupar órdenes por mes-año
+  const ordenesPorMes = {};
+  DB.ordenes.forEach(o => {
+    if(o.fechaSalida){
+      const mesAno = o.fechaSalida.slice(0,7);
+      if(!ordenesPorMes[mesAno]) ordenesPorMes[mesAno] = [];
+      ordenesPorMes[mesAno].push(o);
+    }
+  });
+  
+  // Agrupar gastos por mes-año
+  const gastosPorMes = {};
+  DB.gastos.forEach(g => {
+    if(g.fecha){
+      const mesAno = g.fecha.slice(0,7);
+      if(!gastosPorMes[mesAno]) gastosPorMes[mesAno] = [];
+      gastosPorMes[mesAno].push(g);
+    }
+  });
+  
+  // Generar resumen mensual
+  const todosLosMeses = new Set([...Object.keys(ordenesPorMes), ...Object.keys(gastosPorMes)]);
+  const mesesOrdenados = Array.from(todosLosMeses).sort().reverse();
+  
+  const resumenHTML = mesesOrdenados.map(mesAno => {
+    const ordenes = ordenesPorMes[mesAno] || [];
+    const gastos = gastosPorMes[mesAno] || [];
+    
+    const ingresos = ordenes.reduce((s,o) => s + (Number(o.abono)||0), 0);
+    const gastosTotal = gastos.reduce((s,g) => s + (Number(g.monto)||0), 0);
+    const utilidadMes = ingresos - gastosTotal;
+    const margen = ingresos > 0 ? ((utilidadMes / ingresos) * 100).toFixed(1) : 0;
+    
+    const [ano, mes] = mesAno.split('-');
+    const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const nombreMes = meses[parseInt(mes)-1];
+    
+    return `<tr onclick="filtrarMes('${mesAno}')" style="cursor:pointer;hover:background-color:var(--bg-elev);transition:all 0.15s;">
+      <td><strong>${nombreMes} ${ano}</strong></td>
+      <td style="text-align:right;color:var(--green);">${fmtCLP(ingresos)}</td>
+      <td style="text-align:right;color:var(--red);">${fmtCLP(gastosTotal)}</td>
+      <td style="text-align:right;font-weight:bold;color:${utilidadMes >= 0 ? 'var(--green)' : 'var(--red)'};">${fmtCLP(utilidadMes)}</td>
+      <td style="text-align:right;">${margen}%</td>
+      <td style="text-align:right;">${ordenes.length}</td>
+    </tr>`;
+  }).join('');
+  
+  document.getElementById('resumenMensualBody').innerHTML = resumenHTML || '<tr><td colspan="6" style="text-align:center;color:var(--text-faint);">Sin datos</td></tr>';
+  
+  // Filtrar órdenes por mes/año seleccionado
+  let ordenesFiltradas = [...DB.ordenes];
+  if(mesFiltro){
+    ordenesFiltradas = ordenesFiltradas.filter(o => o.fechaSalida && o.fechaSalida.slice(5,7) === mesFiltro);
+  }
+  if(anioFiltro){
+    ordenesFiltradas = ordenesFiltradas.filter(o => o.fechaSalida && o.fechaSalida.slice(0,4) === anioFiltro);
+  }
+  ordenesFiltradas.sort((a,b) => (b.fechaSalida||'').localeCompare(a.fechaSalida||''));
+  
+  // Renderizar órdenes filtradas
+  document.getElementById('contabilidadOrdenesBody').innerHTML = ordenesFiltradas.map(o => {
+    const total = Number(o.total)||0, abono = Number(o.abono)||0, saldo = total-abono;
+    let estadoPago, colorClass;
+    if(total===0){ estadoPago='Sin costo'; colorClass='badge-ingresado'; }
+    else if(saldo<=0){ estadoPago='Pagado'; colorClass='badge-entregado'; }
+    else if(abono>0){ estadoPago='Parcial'; colorClass='badge-diagnostico'; }
+    else { estadoPago='Pendiente'; colorClass='badge-espera'; }
+    
+    return `<tr>
+      <td>${fmtDate(o.fechaSalida)}</td>
+      <td style="font-family:var(--font-mono);color:var(--cyan);">OT-${o.numeroOT}</td>
+      <td>${escapeHtml(clienteNombre(o.clienteId))}</td>
+      <td style="text-align:right;">${fmtCLP(total)}</td>
+      <td style="text-align:right;color:var(--green);">${fmtCLP(abono)}</td>
+      <td style="text-align:right;color:var(--amber);">${fmtCLP(saldo)}</td>
+      <td><span class="badge ${colorClass}">${estadoPago}</span></td>
+    </tr>`;
+  }).join('');
+  
+  document.getElementById('contabilidadOrdenesEmpty').style.display = ordenesFiltradas.length ? 'none' : 'block';
+  
+  // Filtrar gastos por mes/año seleccionado
+  let gastosFiltrados = [...DB.gastos];
+  if(mesFiltro){
+    gastosFiltrados = gastosFiltrados.filter(g => g.fecha && g.fecha.slice(5,7) === mesFiltro);
+  }
+  if(anioFiltro){
+    gastosFiltrados = gastosFiltrados.filter(g => g.fecha && g.fecha.slice(0,4) === anioFiltro);
+  }
+  gastosFiltrados.sort((a,b) => (b.fecha||'').localeCompare(a.fecha||''));
+  
+  // Renderizar gastos filtrados
+  document.getElementById('contabilidadGastosBody').innerHTML = gastosFiltrados.map(g => {
+    return `<tr>
+      <td>${fmtDate(g.fecha)}</td>
+      <td>${escapeHtml(g.descripcion)}</td>
+      <td><span class="badge badge-ingresado">${escapeHtml(g.categoria)}</span></td>
+      <td style="text-align:right;color:var(--red);font-weight:600;">${fmtCLP(g.monto)}</td>
+    </tr>`;
+  }).join('');
+  
+  document.getElementById('contabilidadGastosEmpty').style.display = gastosFiltrados.length ? 'none' : 'block';
+}
+
+function initContabilidadSelectores(){
+  // Inicializar selector de años
+  const anios = new Set();
+  const ahora = new Date();
+  
+  // Agregar años de órdenes
+  DB.ordenes.forEach(o => {
+    if(o.fechaSalida){
+      const year = o.fechaSalida.slice(0,4);
+      anios.add(year);
+    }
+  });
+  
+  // Agregar años de gastos
+  DB.gastos.forEach(g => {
+    if(g.fecha){
+      const year = g.fecha.slice(0,4);
+      anios.add(year);
+    }
+  });
+  
+  // Agregar año actual y anterior
+  anios.add(String(ahora.getFullYear()));
+  anios.add(String(ahora.getFullYear() - 1));
+  
+  // Ordenar años descendente
+  const aniosOrdenados = Array.from(anios).sort().reverse();
+  
+  const selectAnio = document.getElementById('contabAnio');
+  const opcionesHTML = '<option value="">Todos los años</option>' + 
+    aniosOrdenados.map(y => `<option value="${y}">${y}</option>`).join('');
+  selectAnio.innerHTML = opcionesHTML;
+}
+
+function filtrarMes(mesAno){
+  const [ano, mes] = mesAno.split('-');
+  document.getElementById('contabMes').value = mes;
+  document.getElementById('contabAnio').value = ano;
+  renderContabilidad();
+}
+
+/* ========== IMPRESIÓN ========== */
+function imprimirOT(id){
+  const o = DB.ordenes.find(x=>x.id===id);
+  if(!o){ showToast('⚠ Orden no encontrada'); return; }
+  const c = DB.clientes.find(x=>x.id===o.clienteId) || {};
+  const empresa = DB.empresa || {};
+  
+  try{
+    const logoHtml = empresa.logo ? `<img src="${empresa.logo}" style="max-height:80px;max-width:150px;">` : '';
+    
+    const html = `
+      <div style="border-bottom:3px solid #000;padding-bottom:14px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:flex-start;">
+        <div style="display:flex;gap:12px;align-items:flex-start;">
+          <div>${logoHtml}</div>
+          <div>
+            <h1 style="font-size:22px;letter-spacing:1px;margin:0;">${escapeHtml(empresa.nombre||'TECHSERV PRO')}</h1>
+            <div style="font-size:11px;color:#444;">${escapeHtml(empresa.rut||'')}</div>
+            <div style="font-size:11px;color:#666;margin-top:2px;">${escapeHtml(empresa.direccion||'')}</div>
+            <div style="font-size:11px;color:#666;margin-top:2px;">${escapeHtml(empresa.telefono||'')} | ${escapeHtml(empresa.email||'')}</div>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:18px;font-weight:bold;">ORDEN DE TRABAJO</div>
+          <div style="font-size:16px;">N° OT-${o.numeroOT}</div>
+        </div>
+      </div>
+      <table style="width:100%;font-size:13px;margin-bottom:16px;border-collapse:collapse;">
+        <tr><td style="padding:4px 0;width:50%;"><strong>Cliente:</strong> ${escapeHtml(c.nombre||'—')}</td><td><strong>RUT:</strong> ${escapeHtml(c.rut||'—')}</td></tr>
+        <tr><td style="padding:4px 0;"><strong>Teléfono:</strong> ${escapeHtml(c.telefono||'—')}</td><td><strong>Email:</strong> ${escapeHtml(c.email||'—')}</td></tr>
+        <tr><td style="padding:4px 0;"><strong>Fecha ingreso:</strong> ${fmtDate(o.fechaIngreso)}</td><td><strong>Fecha salida:</strong> ${fmtDate(o.fechaSalida)}</td></tr>
+      </table>
+      <div style="border:1px solid #000;padding:12px;margin-bottom:14px;">
+        <div style="font-weight:bold;margin-bottom:6px;">DATOS DEL EQUIPO</div>
+        <div><strong>Categoría:</strong> ${escapeHtml(o.categoria)}</div>
+        <div><strong>Marca/Modelo:</strong> ${escapeHtml(o.equipo)}</div>
+        <div style="margin-top:6px;"><strong>Falla reportada:</strong><br>${escapeHtml(o.falla)||'—'}</div>
+        ${o.diagnostico?`<div style="margin-top:6px;"><strong>Diagnóstico:</strong><br>${escapeHtml(o.diagnostico)}</div>`:''}
+      </div>
+      <table style="width:100%;font-size:13px;margin-bottom:16px;">
+        <tr><td><strong>Estado:</strong> ${ESTADO_LABELS[o.estado]||o.estado}</td><td><strong>Técnico:</strong> ${escapeHtml(o.tecnico)||'—'}</td></tr>
+        <tr><td><strong>Costo total:</strong> ${fmtCLP(o.total)}</td><td><strong>Abono:</strong> ${fmtCLP(o.abono)}</td></tr>
+      </table>
+      <div style="margin-top:50px;display:flex;justify-content:space-around;font-size:12px;">
+        <div style="text-align:center;">_______________________<br>Firma Cliente</div>
+        <div style="text-align:center;">_______________________<br>Firma Técnico</div>
+      </div>
+      <div style="margin-top:30px;font-size:10px;color:#666;text-align:center;">
+        Documento generado el ${new Date().toLocaleDateString('es-CL')} — ${escapeHtml(empresa.nombre||'TechServ Pro')}
+      </div>
+    `;
+    const printDoc = document.getElementById('printOT');
+    printDoc.innerHTML = html;
+    printDoc.style.display = 'block';
+    setTimeout(()=>{ window.print(); printDoc.style.display='none'; }, 100);
+  }catch(err){
+    showToast('⚠ Error al generar documento');
+    console.error(err);
+  }
+}
+
+function imprimirFactura(id){
+  const o = DB.ordenes.find(x=>x.id===id);
+  if(!o){ showToast('⚠ Orden no encontrada'); return; }
+  const c = DB.clientes.find(x=>x.id===o.clienteId) || {};
+  const empresa = DB.empresa || {};
+  
+  try{
+    const total = Number(o.total)||0, abono = Number(o.abono)||0, saldo = total-abono;
+    const fechaEmision = new Date();
+    const fechaValidez = new Date(fechaEmision); 
+    fechaValidez.setDate(fechaValidez.getDate()+30);
+
+    const logoHtml = empresa.logo ? `<img src="${empresa.logo}" style="max-height:80px;max-width:150px;">` : '';
+
+    const html = `
+      <div style="border-bottom:3px solid #000;padding-bottom:14px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:flex-start;">
+        <div style="display:flex;gap:12px;align-items:flex-start;">
+          <div>${logoHtml}</div>
+          <div>
+            <h1 style="font-size:22px;letter-spacing:1px;margin:0;">${escapeHtml(empresa.nombre||'TECHSERV PRO')}</h1>
+            <div style="font-size:11px;color:#444;">${escapeHtml(empresa.rut||'')}</div>
+            <div style="font-size:11px;color:#666;margin-top:2px;">${escapeHtml(empresa.direccion||'')}</div>
+            <div style="font-size:11px;color:#666;margin-top:2px;">${escapeHtml(empresa.telefono||'')} | ${escapeHtml(empresa.email||'')}</div>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:18px;font-weight:bold;">COMPROBANTE / PRESUPUESTO</div>
+          <div style="font-size:14px;">N° OT-${o.numeroOT}</div>
+          <div style="font-size:11px;color:#555;">Emitido: ${fechaEmision.toLocaleDateString('es-CL')}</div>
+          <div style="font-size:11px;color:#555;">Válido hasta: ${fechaValidez.toLocaleDateString('es-CL')} (30 días)</div>
+        </div>
+      </div>
+      <table style="width:100%;font-size:13px;margin-bottom:18px;">
+        <tr><td style="padding:4px 0;width:50%;"><strong>Cliente:</strong> ${escapeHtml(c.nombre||'—')}</td><td><strong>RUT:</strong> ${escapeHtml(c.rut||'—')}</td></tr>
+        <tr><td style="padding:4px 0;"><strong>Dirección:</strong> ${escapeHtml(c.direccion||'—')}</td><td><strong>Teléfono:</strong> ${escapeHtml(c.telefono||'—')}</td></tr>
+      </table>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:18px;">
+        <thead>
+          <tr style="background:#eee;"><th style="text-align:left;padding:8px;border:1px solid #000;">Descripción</th><th style="text-align:right;padding:8px;border:1px solid #000;">Monto</th></tr>
+        </thead>
+        <tbody>
+          <tr><td style="padding:8px;border:1px solid #000;">Servicio técnico — ${escapeHtml(o.categoria)} ${escapeHtml(o.equipo)}<br><span style="font-size:11px;color:#555;">${escapeHtml(o.falla)||''}</span></td><td style="padding:8px;border:1px solid #000;text-align:right;">${fmtCLP(total)}</td></tr>
+        </tbody>
+        <tfoot>
+          <tr><td style="padding:8px;border:1px solid #000;text-align:right;"><strong>Total</strong></td><td style="padding:8px;border:1px solid #000;text-align:right;"><strong>${fmtCLP(total)}</strong></td></tr>
+          <tr><td style="padding:8px;border:1px solid #000;text-align:right;">Abonado</td><td style="padding:8px;border:1px solid #000;text-align:right;">${fmtCLP(abono)}</td></tr>
+          <tr><td style="padding:8px;border:1px solid #000;text-align:right;"><strong>Saldo Pendiente</strong></td><td style="padding:8px;border:1px solid #000;text-align:right;"><strong>${fmtCLP(saldo)}</strong></td></tr>
+        </tfoot>
+      </table>
+      <div style="font-size:11px;color:#555;margin-top:20px;">
+        Este documento es un comprobante interno y no reemplaza una boleta o factura electrónica del SII.
+      </div>
+      <div style="margin-top:50px;display:flex;justify-content:space-around;font-size:12px;">
+        <div style="text-align:center;">_______________________<br>Firma Cliente</div>
+        <div style="text-align:center;">_______________________<br>${escapeHtml(empresa.nombre||'TechServ Pro')}</div>
+      </div>
+    `;
+    const printDoc = document.getElementById('printFactura');
+    printDoc.innerHTML = html;
+    printDoc.style.display = 'block';
+    setTimeout(()=>{ window.print(); printDoc.style.display='none'; }, 100);
+  }catch(err){
+    showToast('⚠ Error al generar factura');
+    console.error(err);
+  }
+}
+
+/* ========== RESPALDOS ========== */
+function descargarRespaldo(){
+  const data = JSON.stringify(DB, null, 2);
+  const blob = new Blob([data], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const fecha = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `techservpro_respaldo_${fecha}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('✓ Respaldo descargado');
+}
+
+function restaurarRespaldo(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    try{
+      const parsed = JSON.parse(e.target.result);
+      if(!Array.isArray(parsed.clientes) || !Array.isArray(parsed.ordenes)){
+        throw new Error('Formato inválido');
+      }
+      if(!confirm('Esto reemplazará todos los datos actuales. ¿Continuar?')) return;
+      DB = {
+        clientes: parsed.clientes,
+        ordenes: parsed.ordenes,
+        inventario: parsed.inventario || [],
+        gastos: parsed.gastos || [],
+        nextOT: parsed.nextOT || (parsed.ordenes.length+1),
+        empresa: parsed.empresa || {}
+      };
+      saveDB();
+      renderAll();
+      showToast('✓ Respaldo restaurado correctamente');
+    }catch(err){
+      showToast('⚠ Archivo inválido o corrupto');
+      console.error(err);
+    }
+  };
+  reader.onerror = ()=> showToast('⚠ No se pudo leer el archivo');
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function borrarTodo(){
+  if(!confirm('¿Estás seguro? Esta acción eliminará TODOS los clientes, órdenes, inventario, gastos y datos de empresa permanentemente.')) return;
+  if(!confirm('Confirma nuevamente: se perderán todos los datos sin posibilidad de recuperación (a menos que tengas un respaldo).')) return;
+  DB = { clientes: [], ordenes: [], inventario: [], gastos: [], nextOT: 1, empresa: {} };
+  saveDB();
+  renderAll();
+  showToast('✓ Todos los datos fueron eliminados');
+}
+
+/* ========== EVENTS ========== */
+document.getElementById('searchClientes').addEventListener('input', renderClientes);
+document.getElementById('searchOrdenes').addEventListener('input', renderOrdenes);
+document.getElementById('searchInventario').addEventListener('input', renderInventario);
+document.getElementById('searchGastos').addEventListener('input', renderGastos);
+document.getElementById('filterEstado').addEventListener('change', renderOrdenes);
+document.getElementById('filterGastosMes').addEventListener('change', renderGastos);
+document.getElementById('contabMes').addEventListener('change', renderContabilidad);
+document.getElementById('contabAnio').addEventListener('change', renderContabilidad);
+
+// Soporte para tecla ESC para cerrar modales
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape'){
+    document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+  }
+});
+
+// Soporte para tecla Enter en modales para guardar
+const modalInputs = [
+  { selector: '#modalCliente input, #modalCliente textarea', action: 'guardarCliente' },
+  { selector: '#modalOrden input, #modalOrden textarea, #modalOrden select', action: 'guardarOrden' },
+  { selector: '#modalInventario input, #modalInventario textarea', action: 'guardarInventario' },
+  { selector: '#modalGasto input, #modalGasto textarea, #modalGasto select', action: 'guardarGasto' },
+];
+
+modalInputs.forEach(item => {
+  document.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter' && document.querySelector(item.selector + ':focus')){
+      e.preventDefault();
+      const modal = document.querySelector(item.selector).closest('.modal-overlay');
+      if(modal && modal.classList.contains('open')){
+        window[item.action]();
+      }
+    }
+  });
+});
+
+document.querySelectorAll('.modal-overlay').forEach(overlay=>{
+  overlay.addEventListener('click', (e)=>{ if(e.target===overlay) overlay.classList.remove('open'); });
+});
+
+/* ========== RENDER ALL ========== */
+function renderAll(){
+  renderDashboard();
+  renderClientes();
+  refreshClienteSelect();
+  renderOrdenes();
+  renderInventario();
+  renderGastos();
+  renderContabilidad();
+}
+
+renderAll();
+</script>
+</body>
+</html>
